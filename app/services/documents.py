@@ -10,7 +10,6 @@ from .financial import validate_financials
 from .ocr import extract_text
 from .validation import validate_file
 
-
 def process_document(file_storage, document_type):
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     safe_name = Path(file_storage.filename or "document").name
@@ -21,8 +20,7 @@ def process_document(file_storage, document_type):
     if error:
         raise ValueError(error)
     try:
-        pages = extract_text(path)
-        extracted = extract_document(document_type, pages)
+        extracted = extract_document(document_type, path)
         extracted_data = extracted.get("extracted_data", {}) if isinstance(extracted, dict) else {}
         if not _has_usable_extraction(extracted_data):
             raise ValueError("No usable financial fields could be extracted from the document.")
@@ -39,7 +37,7 @@ def process_document(file_storage, document_type):
         "file_validation": file_validation,
         "extracted_data": extracted_data,
         "validation": validation,
-        "processing_metadata": {"ocr_used": True, "extraction_source": "pytesseract", "validation_source": "gemini_and_deterministic_rules", "processed_at": datetime.now(timezone.utc).isoformat(), "processing_time_ms": round((time.perf_counter() - started) * 1000)},
+        "processing_metadata": {"ocr_used": False, "extraction_source": "gemini_document_input", "validation_source": "gemini_and_deterministic_rules", "processed_at": datetime.now(timezone.utc).isoformat(), "processing_time_ms": round((time.perf_counter() - started) * 1000)},
     }
     if extraction_error:
         result["processing_error"] = extraction_error

@@ -7,7 +7,6 @@ grpcio-status
 protobuf
 pdfplumber
 Pillow
-pytesseract
 python-dotenv
 gunicorn
 python-docx
