@@ -7,7 +7,6 @@ from ..config import UPLOAD_DIR
 from ..database import save_result
 from .extraction import extract_document
 from .financial import validate_financials
-from .ocr import extract_text
 from .validation import validate_file
 
 def process_document(file_storage, document_type):
