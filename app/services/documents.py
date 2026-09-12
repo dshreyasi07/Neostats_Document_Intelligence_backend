@@ -32,7 +32,7 @@ def process_document(file_storage, document_type):
     result = {
         "document_name": safe_name,
         "document_type": document_type,
-        "processing_status": "PASS" if validation["overall_status"] == "PASS" else "FAILED",
+        "processing_status": "FAILED" if validation["overall_status"] == "FAIL" else "PASS",
         "file_validation": file_validation,
         "extracted_data": extracted_data,
         "validation": validation,
