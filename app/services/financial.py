@@ -122,12 +122,13 @@ def _comparison_check(name, formula, operands, calculated, reported):
 
 
 def _validate_with_gemini(extracted_data):
-    import google.generativeai as genai
+    from google import genai
 
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-    model = genai.GenerativeModel(
-        os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
-        system_instruction="""You are a financial validation engine. Validate only the supplied extracted data. Do not perform document extraction and do not invent or repair values.
+    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+    response = client.models.generate_content(
+        model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+        contents=json.dumps(extracted_data, default=str),
+        config={"response_mime_type": "application/json", "system_instruction": """You are a financial validation engine. Validate only the supplied extracted data. Do not perform document extraction and do not invent or repair values.
 
 Recalculate every possible financial relationship using the actual values present:
 - invoice: each quantity * unit_price must equal its line amount; sum of line amounts must reconcile with subtotal; subtotal + tax - discount must equal total amount. Handle tax-included totals explicitly. Check for the values along with original and the final value after considering all discounts and taxes.
@@ -136,9 +137,8 @@ Recalculate every possible financial relationship using the actual values presen
 - cash_flow_statement: operating + investing + financing + FX adjustment must equal net cash change; opening cash plus net change must equal closing cash.
 
 Use parentheses as negative numbers. Use a tolerance of 0.05 for currency rounding. Do not assume missing fields: return NOT_APPLICABLE for a relationship when its required values are absent. Return FAIL whenever an available calculation does not reconcile. Return only JSON in this shape: {"checks":[{"name":"...","formula":"...","operands":{},"calculated_value":null,"reported_value":null,"variance":null,"status":"PASS|FAIL|NOT_APPLICABLE"}],"overall_status":"PASS|FAIL|NOT_APPLICABLE","issues":[]}.
-""",
+"""},
     )
-    response = model.generate_content(json.dumps(extracted_data, default=str), generation_config={"response_mime_type": "application/json"})
     result = json.loads(response.text)
     if not isinstance(result.get("checks"), list) or result.get("overall_status") not in {"PASS", "FAIL", "NOT_APPLICABLE"}:
         raise ValueError("Gemini returned an invalid invoice validation response")

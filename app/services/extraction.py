@@ -8,19 +8,19 @@ def extract_document(document_type, path):
     if not api_key:
         raise ValueError("GEMINI_API_KEY is not configured.")
 
-    import google.generativeai as genai
+    from google import genai
 
-    genai.configure(api_key=api_key)
-    uploaded_file = genai.upload_file(path=str(path), mime_type=_mime_type(path))
+    client = genai.Client(api_key=api_key)
+    uploaded_file = client.files.upload(file=str(path), config={"mime_type": _mime_type(path)})
     try:
-        model = genai.GenerativeModel(os.getenv("GEMINI_MODEL", "gemini-2.5-flash"))
-        response = model.generate_content(
-            [_extraction_prompt(document_type), uploaded_file],
-            generation_config={"response_mime_type": "application/json"},
+        response = client.models.generate_content(
+            model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+            contents=[_extraction_prompt(document_type), uploaded_file],
+            config={"response_mime_type": "application/json"},
         )
     finally:
         try:
-            genai.delete_file(uploaded_file.name)
+            client.files.delete(name=uploaded_file.name)
         except Exception:
             pass
 
